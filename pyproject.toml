@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "examsuite-importer"
 version = "0.1.0"
 dependencies = [
-    "python-docx"
+    "python-docx",
+    "pytest"
 ]
 
 [tool.setuptools.packages.find]
