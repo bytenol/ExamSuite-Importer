@@ -1,6 +1,5 @@
-import pathlib
-
 from examsuite_importer.question.QuestionParser import QuestionParser
+
 
 
 
@@ -10,7 +9,7 @@ def test_parser_creation():
     assert parsed.success == True
     assert parsed.errors == []
     assert parsed.exception.strip() == ""
-    
+
 
 
 def test_parser_exception():

@@ -45,7 +45,7 @@ class Question:
 
 
     def _extractChoice(self):
-        option_start = list(filter(lambda x: x.startswith("(a)"), self._text))
+        option_start = list(filter(lambda x: x.startswith("(a) "), self._text))
 
         if not len(option_start):
             return
@@ -54,10 +54,11 @@ class Question:
 
         for  i in range(last_index, len(self._text)):
             text = self._text[i].replace("\n", "").split(" ")
+
             if len(text) > 1:
                 self._choices.append(QuestionChoice(
                     label=text[0].replace(r"(", "").replace(")", "").strip(),
-                    text=text[1].strip()
+                    text=" ".join(text[1:]).strip().replace("\n", "")
                 ))
 
         del self._text[last_index:]
