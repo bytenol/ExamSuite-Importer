@@ -30,6 +30,11 @@ class QuestionValidatorError:
     content: str 
     message: str 
 
+
+
 @dataclass
-class QuestionParserError:
-    error: str
+class QuestionParserResult:
+    success: bool 
+    exception: str 
+    errors: list[QuestionValidatorError] = field(default_factory=list)
+    questions: list[QuestionData] = field(default_factory=list)

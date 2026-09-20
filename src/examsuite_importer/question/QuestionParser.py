@@ -1,13 +1,10 @@
-from dataclasses import dataclass
-import re
-
 from docx import Document
 
 from examsuite_importer.question.ParagraphParser import ParagraphParser
 from examsuite_importer.question.question_types import (
     QuestionChoice, 
-    QuestionData, 
-    QuestionParserError, 
+    QuestionData,
+    QuestionParserResult, 
     QuestionVarities
 )
 from examsuite_importer.question.question_validator import QuestionValidator
@@ -75,10 +72,10 @@ class Question:
             if line.startswith("mark") or line.startswith("answer"):
                 l = line.split(" ")
                 if line.startswith("mark"):
-                    self._mark = float(l[1] or "1")
+                    self._mark = float(l[1].strip().replace("\n", "") or "1")
                     index.append(iter)            
                 elif line.startswith("answer"):
-                    self._answer = l[1]
+                    self._answer = l[1].strip().replace("\n", "")
                     index.append(iter)
 
         self._clearTextRange(index)
@@ -105,11 +102,15 @@ class QuestionParser:
         try:
             document = Document(self.filePath)
         except Exception as e:
-            return QuestionParserError(error=f"Unable to import docx: {e}")
+            return QuestionParserResult(
+                success=False,
+                exception=f"Unable to import Document: {str(e)}"
+            )
+
 
         questions: list[Question] = []
 
-        for i, paragraph in enumerate(document.paragraphs):
+        for _, paragraph in enumerate(document.paragraphs):
             p = ParagraphParser(paragraph.text)
 
             text = p.getText().lower().strip()
@@ -127,5 +128,10 @@ class QuestionParser:
 
         validator = QuestionValidator(parsed_questions).validate()
 
-        return (validator)
+        return QuestionParserResult(
+            success=len(validator) == 0,
+            exception="",
+            errors=validator,
+            questions=parsed_questions
+        )
             

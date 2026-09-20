@@ -10,36 +10,42 @@ class QuestionValidator:
 
 
     def validate(self):
+        iter = 0
         for question in self._questions:
-            cn = self._validateContent(question.content)
-            ch = self._validateChoice(question.choices)
-            an = self._validateAnswer(question.answer)
-            mk = self._validateMark(question.mark)
-            ty = self._validateType(question.type)
-             
-    
-        return cn and ch and an and mk and ty 
+            iter += 1
+            content=question.content[:30]
 
+            if not question.answer and not question.type == QuestionVarities.THEORY:
+                self._error.append(
+                    QuestionValidatorError(
+                        line=iter,
+                        content=content,
+                        message="Answer must be provided for this question"
+                    )
+                )
+                continue 
 
+            if question.type == QuestionVarities.SINGLE_CHOICE:
+                # single choice question expects just a character as an answer 
+                if len(question.answer) != 1 or not question.answer in "abcd":
+                    self._error.append(
+                        QuestionValidatorError(
+                            line=iter,
+                            content=content,
+                            message="Answer to a SingleChoice Question must be a single character 'a','b','c','d'"
+                        )
+                    )
 
-    def _validateType(self, type: QuestionVarities):
-        return True 
-    
+                    continue    
 
-    def _validateMark(self, mark: float):
+                if len(question.choices) != 4:
+                    self._error.append(
+                        QuestionValidatorError(
+                            line=iter,
+                            content=content,
+                            message="SingleChoice Question must provide 4 options"
+                        )
+                    )
+                    continue 
 
-        return True 
-
-    def _validateAnswer(self, answer: str):
-        return True 
-    
-
-    def _validateContent(self, content: str):
-        return True 
-
-
-    def _validateChoice(self, choices: list[QuestionChoice]):
-        for choice in choices:
-            pass 
-
-        return True 
+        return self._error
