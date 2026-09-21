@@ -1,3 +1,9 @@
+class InvalidFileNameError(Exception):
+    """Raised when the docx file naming does not match the required convention
+    The convention is subject_class_section
+    """
+
+
 class ExamSuiteImporterError(Exception):
     """Base exception for ExamSuite Importer."""
 

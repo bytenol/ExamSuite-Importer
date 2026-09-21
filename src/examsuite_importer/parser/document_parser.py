@@ -5,6 +5,7 @@ from pathlib import Path
 from docx import Document
 from docx.opc.exceptions import PackageNotFoundError
 
+from examsuite_importer.exceptions import InvalidFileNameError
 from examsuite_importer.models import (
     ExamMetadata,
     ImportError,
@@ -26,7 +27,13 @@ class DocumentParser:
         self.file_path = Path(file_path)
 
     def parse(self) -> ImportResult:
+        metadata = ExamMetadata()
+
         try:
+            subject, class_name, section = self._get_metadata(self.file_path)
+            metadata.section = section
+            metadata.class_name = class_name
+            metadata.subject = subject
             document = Document(self.file_path)
 
         except (PackageNotFoundError, OSError, ValueError) as exc:
@@ -43,7 +50,19 @@ class DocumentParser:
                 ],
             )
 
-        metadata = ExamMetadata()
+        except InvalidFileNameError as exc:
+            return ImportResult(
+                success=False,
+                metadata=ExamMetadata(),
+                errors=[
+                    ImportError(
+                        question_number=None,
+                        message=(
+                            f"Filename mismatch: {exc}"
+                        ),
+                    )
+                ],
+            )
 
         questions: list[QuestionData] = []
         errors: list[ImportError] = []
@@ -53,9 +72,7 @@ class DocumentParser:
 
         for paragraph in document.paragraphs:
             try:
-                text = ParagraphParser(
-                    paragraph
-                ).parse()
+                text = ParagraphParser(paragraph).parse()
 
             except Exception as exc:
                 errors.append(
@@ -69,14 +86,6 @@ class DocumentParser:
                 continue
 
             if not text.strip():
-                continue
-
-            metadata_key = self._parse_metadata(
-                text,
-                metadata,
-            )
-
-            if metadata_key:
                 continue
 
             if self._is_question_marker(text):
@@ -131,36 +140,18 @@ class DocumentParser:
         return text.strip().lower() == "question"
 
     @staticmethod
-    def _parse_metadata(
-        text: str,
-        metadata: ExamMetadata,
-    ) -> bool:
-        if ":" not in text:
-            return False
-
-        key, value = text.split(":", 1)
-
-        key = key.strip().lower()
-        value = value.strip()
-
-        if key == "subject":
-            metadata.subject = value
-            return True
-
-        if key == "class":
-            metadata.class_name = value
-            return True
-
-        if key == "section":
-            metadata.section = value
-            return True
-
-        return False
-
-    @staticmethod
-    def _finish_question(
-        parser: QuestionParser,
-    ) -> tuple[QuestionData, list[ImportError]]:
+    def _finish_question(parser: QuestionParser) -> tuple[QuestionData, list[ImportError]]:
         question = parser.parse()
 
         return question, parser.errors
+
+
+    @staticmethod
+    def _get_metadata(path: str | Path):
+        name = path.stem.split("_")
+        if  len(name) != 3:
+            raise InvalidFileNameError("File must be named as subject_class_section")
+
+        return (name[0], name[1], name[2])
+
+
