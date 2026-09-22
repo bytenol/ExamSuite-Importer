@@ -1,6 +1,5 @@
 from __future__ import annotations
-
-from pathlib import Path
+import re 
 
 from docx import Document
 from docx.opc.exceptions import PackageNotFoundError
@@ -23,8 +22,8 @@ from .question_parser import QuestionParser
 
 class DocumentParser:
 
-    def __init__(self, file_path: str | Path):
-        self.file_path = Path(file_path)
+    def __init__(self, file_path: str):
+        self.file_path = file_path
 
     def parse(self) -> ImportResult:
         metadata = ExamMetadata()
@@ -147,8 +146,12 @@ class DocumentParser:
 
 
     @staticmethod
-    def _get_metadata(path: str | Path):
-        name = path.stem.split("_")
+    def _get_metadata(file_path: str):
+        m = re.search(r"[^/\\]+\.docx$", str(file_path))
+        if not m:
+            return ("", "", "")
+
+        name = (m.group().split(".docx")[0]).split("_")
         if  len(name) != 3:
             raise InvalidFileNameError("File must be named as subject_class_section")
 

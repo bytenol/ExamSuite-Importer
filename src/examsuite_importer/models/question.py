@@ -3,9 +3,9 @@ from enum import Enum
 
 
 class QuestionType(str, Enum):
-    THEORY = "theory"
-    FILL_IN_BLANK = "fill_in_blank"
-    SINGLE_CHOICE = "single_choice"
+    THEORY = "THEORY"
+    FILL_IN_BLANK = "FILL_BLK"
+    SINGLE_CHOICE = "OBJ"
 
 
 @dataclass(slots=True)
